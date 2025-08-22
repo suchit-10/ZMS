@@ -1,4 +1,3 @@
-
 import { Router, Request, Response } from 'express';
 import { validateData } from '../../core/validation';
 import { SignInSchema, CreateUserSchema, SignInRequest, CreateUserRequest } from '../users/dto';
@@ -34,8 +33,6 @@ authRouter.post('/signin', async (req: Request, res: Response) =>  {
 
   }
   const token = GenerateTokenPayload(payload)
-
-
   res.json({
     message:"authenticated successfully",
     data:{
