@@ -4,6 +4,4 @@ export interface DietItemDTO {
     feedingTime:string
     preparationInstructions?:string
     nutritionNotes?:string
-
-    
 }
