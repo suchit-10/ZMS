@@ -15,37 +15,21 @@ export const OnboardSchema = z.object({
       tatoo: z.string().optional()
     }).optional(),
     weight: z.number().optional()
-  })
-})
+  }),
+  enclosure: z.object({
+    enclosure_name: z.string(),
+    enclosure_type: z.string(),
+    temperature_min_celsius: z.number(),
+    temperature_max_celsius: z.number(),
+    safety_level: z.string(),
+  }),
+  diet_plan: z.object({
+    diet_name: z.string(),
+    diet_items: z.array(z.custom<DietItemDTO>()),
+    age_category: z.string(),
+    special_conditions: z.string().optional(),
+    total_calories: z.number(),
+  }),
+});
 
-export interface OnboardRequest {
-  animal: {
-    name: string;
-    species: string;
-    sex: string;
-    age: number;
-    acquisition_date: string;
-    acquisition_type: string;
-    identification?: {
-      microchip_id?: string;
-      tattoo?: string;
-    };
-    weight?: number;
-  };
-  enclosure: {
-    enclosure_name: string;
-    enclosure_type: string;
-    temperature_min_celsius:number
-    temperature_max_celsius:number
-    safety_level:string
-  };
-  diet_plan: {
-    diet_name: string;
-    diet_items: DietItemDTO[]
-    age_category: string;
-    special_conditions?: string;
-    total_calories: number;
-  };
-}
-
-// export type OnboardRequest = z.infer<typeof OnboardSchema>;
+export type OnboardRequest = z.infer<typeof OnboardSchema>;
