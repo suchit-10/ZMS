@@ -38,7 +38,7 @@ const BehavioralObservationSchema = new Schema<IBehavioralObservation>(
 
     observer_staff_id: {
       type: Schema.Types.ObjectId,
-      ref: "Staff",
+      ref: "User",
       required: false,
       index: true,
     },

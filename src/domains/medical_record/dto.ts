@@ -47,10 +47,7 @@ const MedicalRecordSchema = z.object({
   
   notes: z.string().max(3000, "Notes too long").optional(),
   
-  extra_attributes: z.record(z.any()).refine(
-    (val) => typeof val === 'object' && val !== null && !Array.isArray(val),
-    "Extra attributes must be a valid JSON object"
-  ).default({})
+  extra_attributes: z.object().default({})
 });
 
 export const MedicalRecordParamsSchema = z.object({

@@ -16,7 +16,7 @@ const observationRouter = Router();
 // POST / - Create new observation
 observationRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
   const bodyValidation = validateData<ObservationRequest>(req.body, ObservationSchema);
-  
+  const userId = req.claims?.user_id
   if (!bodyValidation.success) {
     res.status(400).json({
       message: 'Validation failed',
@@ -26,7 +26,7 @@ observationRouter.post('/', async (req: AuthenticatedRequest, res: Response) => 
   }
 
   try {
-    const observation = await ObservationService.createObservation(bodyValidation.data!);
+    const observation = await ObservationService.createObservation(bodyValidation.data!, userId!);
     
     res.status(201).json({
       message: 'Observation created successfully',
@@ -77,7 +77,7 @@ observationRouter.get('/:id', async (req: AuthenticatedRequest, res: Response) =
 });
 
 // GET /by-animal - Get all observations by animal ID
-observationRouter.get('/by-animal', async (req: AuthenticatedRequest, res: Response) => {
+observationRouter.get('/', async (req: AuthenticatedRequest, res: Response) => {
   const queryValidation = validateData<AnimalObservationsQuery>(req.query, AnimalObservationsQuerySchema);
   
   if (!queryValidation.success) {

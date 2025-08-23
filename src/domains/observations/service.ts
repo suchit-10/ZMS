@@ -4,12 +4,12 @@ import { ObservationRequest } from './dto';
 
 export class ObservationService {
   
-  static async createObservation(data: ObservationRequest): Promise<IBehavioralObservation> {
+  static async createObservation(data: ObservationRequest, userId:string): Promise<IBehavioralObservation> {
     try {
       const observationData = {
         ...data,
         animal_id: new mongoose.Types.ObjectId(data.animal_id),
-        observer_staff_id: data.observer_staff_id ? new mongoose.Types.ObjectId(data.observer_staff_id) : undefined,
+        observer_staff_id: userId,
       };
 
       const observation = new BehavioralObservation(observationData);
@@ -30,7 +30,8 @@ export class ObservationService {
   static async getObservationById(observationId: string): Promise<IBehavioralObservation | null> {
     try {
       const objectId = new mongoose.Types.ObjectId(observationId);
-      const observation = await BehavioralObservation.findById(objectId);
+      const observation = await BehavioralObservation.findById(objectId).populate('animal_id', 'name species microchip_id')
+          .populate('observer_staff_id', 'usename');
       
       return observation
     } catch (error) {
@@ -60,7 +61,7 @@ export class ObservationService {
           .skip(skip)
           .limit(limit)
           .populate('animal_id', 'name species microchip_id')
-          .populate('observer_staff_id', 'name employee_id'),
+          .populate('observer_staff_id', 'username'),
         BehavioralObservation.countDocuments({ animal_id: objectId })
       ]);
 

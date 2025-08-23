@@ -11,10 +11,6 @@ const ObservationSchema = z.object({
     "Observation date cannot be in the future"
   ),
   
-  observer_staff_id: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
-    message: 'Invalid staff ID format'
-  }).optional(),
-  
   behavior_category: z.enum([
     "feeding",
     "social", 

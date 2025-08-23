@@ -1,5 +1,5 @@
 import z from "zod";
-import { DietItemDTO } from "../diet/dto";
+import { DietItemDTO } from "../animals/dto";
 
 export const OnboardSchema = z.object({
   animal: z.object({
