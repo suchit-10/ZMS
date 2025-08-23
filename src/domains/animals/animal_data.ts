@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 const DietItemSchema = new Schema({
   foodItem: { type: String, required: true },
   quantityInGrams: { type: Number, required: true },
-  feedingTime: { type: String, required: true }, // "HH:mm:ss"
+  feedingTime: { type: String, required: true },
   preparationInstructions: { type: String },
   nutritionalNotes: { type: String },
 });
