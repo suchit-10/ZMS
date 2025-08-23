@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import { onboardService } from "./onboard.services";
+import { AuthenticatedRequest } from "@/middleware/jwt";
+import { validateData } from "@/core/validation";
+import { OnboardRequest, OnboardSchema } from "./onboard.types";
 
-export const onboardAnimal = async (req: Request, res: Response) => {
+export const onboardAnimal = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    // const validatedData = validateData<OnboardRequest>(req.body,OnboardSchema)
     const data = await onboardService(req.body);
 
     res.status(201).json({

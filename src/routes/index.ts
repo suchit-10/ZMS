@@ -8,10 +8,10 @@ const apiRouter = Router();
 const protectedRouter = Router();
 
 apiRouter.use('/auth', authRoutes);
-apiRouter.use('/onboard', onboardRoutes);
 
 protectedRouter.use(JWTMiddleware);
 protectedRouter.use('/users', userRoutes);
+protectedRouter.use('/onboard',onboardRoutes)
 
 apiRouter.use(protectedRouter);
 

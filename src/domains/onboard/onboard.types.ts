@@ -1,3 +1,23 @@
+import z from "zod";
+import { DietItemDTO } from "../diet/dto";
+
+
+export const OnboardSchema = z.object({
+  animal: z.object({
+    name: z.string(),
+    species:z.string(),
+    sex:z.string(),
+    age:z.number(),
+    acquisition_date: z.date(),
+    acquisition_type: z.string(),
+    identification: z.object({
+      microchip_id : z.string().optional(),
+      tatoo: z.string().optional()
+    }).optional(),
+    weight: z.number().optional()
+  })
+})
+
 export interface OnboardRequest {
   animal: {
     name: string;
@@ -13,24 +33,19 @@ export interface OnboardRequest {
     weight?: number;
   };
   enclosure: {
-    enclosure_id: string;
     enclosure_name: string;
     enclosure_type: string;
-    entry_date: string;
+    temperature_min_celsius:number
+    temperature_max_celsius:number
+    safety_level:string
   };
   diet_plan: {
     diet_name: string;
-    age_category: "infant" | "juvenile" | "adult" | "senior";
+    diet_items: DietItemDTO[]
+    age_category: string;
     special_conditions?: string;
     total_calories: number;
   };
-  medical_record: {
-    initial_checkup_date: string;
-    veterinarian: {
-      _id: string;
-      name: string;
-      employee_id: string;
-    };
-    notes?: string;
-  };
 }
+
+// export type OnboardRequest = z.infer<typeof OnboardSchema>;
