@@ -7,7 +7,7 @@ export const OnboardSchema = z.object({
     species: z.string(),
     sex: z.string(),
     age: z.number(),
-    acquisitionDate: z.date(),
+    acquisitionDate: z.string(),
     acquisitionType: z.string(),
     identification: z
       .object({
@@ -15,7 +15,7 @@ export const OnboardSchema = z.object({
         tatoo: z.string().optional(),
       })
       .optional(),
-    weight: z.number().optional(),
+    weight: z.number(),
   }),
   enclosure: z.object({
     enclosureName: z.string(),

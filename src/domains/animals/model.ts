@@ -47,8 +47,9 @@ export interface IAnimal extends Document {
   dateOfDeath?: Date;
   causeOfDeath?: string;
   distinguishingMarks?: string;
-  images?: string[];
+  images: string;
   microchipId?: string;
+  weight:number;
   extraAttributes?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
@@ -67,14 +68,15 @@ const AnimalSchema = new Schema<IAnimal>({
   dateOfDeath: { type: Date },
   causeOfDeath: { type: String },
   distinguishingMarks: { type: String },
-  images: [{ type: String }],
+  images: { type: String},
   microchipId: { type: String, unique: true },
+  weight:{type:Number,required:true},
   extraAttributes: { type: Schema.Types.Mixed },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-
   enclosure: { type: EnclosureSchema, required: true },
   dietPlan: { type: DietPlanSchema, required: true },
+  
+},{
+  timestamps:true
 });
 
 export const Animal = mongoose.model<IAnimal>("Animal", AnimalSchema);
