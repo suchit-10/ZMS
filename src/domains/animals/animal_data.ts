@@ -21,7 +21,7 @@ const DietPlanSchema = new Schema({
 
 const EnclosureSchema = new Schema({
   enclosureName: { type: String, required: true },
-  enclosureType: { type: String, enum: ["indoor", "outdoor"], required: true },
+  enclosureType: { type: String, enum: ["indoor", "outdoor", "mixed"], required: true },
   areaSquareMeters: { type: Number },
   capacityMax: { type: Number },
   climateControlled: { type: Boolean, default: false },
