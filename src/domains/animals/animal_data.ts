@@ -11,7 +11,7 @@ const DietItemSchema = new Schema({
 
 const DietPlanSchema = new Schema({
   dietName: { type: String, required: true },
-  ageCategory: { type: String, enum: ["infant", "juvenile", "adult", "senior"], default: "adult" },
+  ageCategory: { type: String, enum: ["adult", "senior"], default: "adult" },
   specialConditions: { type: String },
   totalCaloriesPerDay: { type: Number },
   feedingFrequencyPerDay: { type: Number },
@@ -21,7 +21,7 @@ const DietPlanSchema = new Schema({
 
 const EnclosureSchema = new Schema({
   enclosureName: { type: String, required: true },
-  enclosureType: { type: String, enum: ["indoor", "outdoor", "mixed", "aquatic", "aviary"], required: true },
+  enclosureType: { type: String, enum: ["indoor", "outdoor"], required: true },
   areaSquareMeters: { type: Number },
   capacityMax: { type: Number },
   climateControlled: { type: Boolean, default: false },
@@ -29,7 +29,7 @@ const EnclosureSchema = new Schema({
   temperatureMaxCelsius: { type: Number },
   humidityMinPercent: { type: Number },
   humidityMaxPercent: { type: Number },
-  safetyLevel: { type: String, enum: ["publicViewing", "restrictedAccess", "quarantine", "hospital"] },
+  safetyLevel: { type: String, enum: ["restrictedAccess", "quarantine", "hospital"] },
   locationCoordinates: { type: String },
   constructionDate: { type: Date },
   lastMaintenanceDate: { type: Date },

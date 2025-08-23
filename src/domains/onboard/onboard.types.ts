@@ -25,11 +25,12 @@ export const OnboardSchema = z.object({
     safetyLevel: z.string(),
   }),
   dietPlan: z.object({
-    dietName: z.string(),
-    dietItems: z.array(z.custom<DietItemDTO>()),
-    ageCategory: z.string(),
-    specialConditions: z.string().optional(),
-    totalCalories: z.number(),
+  dietName: z.string(),
+  ageCategory: z.enum(["adult", "senior"]).default("adult"),
+  specialConditions: z.string().optional(),
+  totalCaloriesPerDay: z.number(),
+  feedingFrequencyPerDay: z.number(),
+  dietItems: z.array(z.custom<DietItemDTO>()),
   }),
 });
 
