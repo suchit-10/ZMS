@@ -19,7 +19,7 @@ interface SignInResponse {
 
 export const authService = {
   signIn: async (data: SignInRequest): Promise<SignInResponse> => {
-    const response = await api.post<SignInResponse>("/auth/signin", data);
+    const response = await api.post<SignInResponse>("/v1/auth/signin", data);
     return response;
   },
 
