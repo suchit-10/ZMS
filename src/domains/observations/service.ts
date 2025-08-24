@@ -9,7 +9,7 @@ export class ObservationService {
       const observationData = {
         ...data,
         animal_id: new mongoose.Types.ObjectId(data.animal_id),
-        observer_staff_id: userId,
+        observer_staff_id: data.observer_staff_id ? new mongoose.Types.ObjectId(data.observer_staff_id) : new mongoose.Types.ObjectId(userId),
       };
 
       const observation = new BehavioralObservation(observationData);
@@ -31,7 +31,7 @@ export class ObservationService {
     try {
       const objectId = new mongoose.Types.ObjectId(observationId);
       const observation = await BehavioralObservation.findById(objectId).populate('animal_id', 'name species microchip_id')
-          .populate('observer_staff_id', 'usename');
+          .populate('observer_staff_id', 'username');
       
       return observation
     } catch (error) {

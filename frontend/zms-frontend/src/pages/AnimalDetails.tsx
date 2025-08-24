@@ -2,38 +2,23 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from "../components/Sidebar"
 import Header from "../components/Header"
+import AnimalOverview from "../components/AnimalOverview"
+import DietPlanOverview from "../components/DietPlanOverview"
+import ObservationsList from "../components/ObservationsList"
+import MedicalRecordsList from "../components/MedicalRecordsList"
+import FeedingRecordsList from "../components/FeedingRecordsList"
+import AddFeedingRecordModal from "../components/AddFeedingRecordModal"
+import AddMedicalRecordModal from "../components/AddMedicalRecordModal"
+import AddObservationModal from "../components/AddObservationModal"
 import { api } from "../lib/http-client"
-import { ArrowLeft, Calendar, MapPin, Scale, Heart, User, Thermometer, Home } from 'lucide-react'
-
-interface AnimalDetailsData {
-  _id: string
-  name: string
-  species: string
-  sex: string
-  age: number
-  weight: number
-  acquisitionDate: string
-  acquisitionType: string
-  microchipId: string
-  distinguishingMarks?: string
-  images?: string
-  enclosure: {
-    enclosureName: string
-    enclosureType: string
-    temperatureMinCelsius?: number
-    temperatureMaxCelsius?: number
-    safetyLevel: string
-  }
-  dietPlan: {
-    dietName: string
-    ageCategory: string
-    specialConditions?: string
-    totalCaloriesPerDay?: number
-    feedingFrequencyPerDay?: number
-  }
-  createdAt: string
-  updatedAt: string
-}
+import { ArrowLeft, Eye, Stethoscope, Utensils, Home } from 'lucide-react'
+import type { 
+  AnimalDetailsData, 
+  Observation, 
+  MedicalRecord, 
+  FeedingRecord, 
+  ModalType 
+} from '../types/animalDetails'
 
 type TabType = 'overview' | 'observations' | 'medical' | 'feeding'
 
@@ -43,13 +28,19 @@ export const AnimalDetails = () => {
   const [animal, setAnimal] = useState<AnimalDetailsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [activeModal, setActiveModal] = useState<ModalType>(null)
+  
+  // Data states
+  const [observations, setObservations] = useState<Observation[]>([])
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([])
+  const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([])
+  const [loadingRecords, setLoadingRecords] = useState(false)
 
   useEffect(() => {
     const fetchAnimal = async () => {
       try {
         setLoading(true)
         const response = await api.get(`/v1/animals/${id}`)
-        // Handle the response based on the actual API structure
         const data = (response as Record<string, unknown>)?.data || response
         setAnimal(data as AnimalDetailsData)
       } catch (error) {
@@ -64,6 +55,66 @@ export const AnimalDetails = () => {
     }
   }, [id])
 
+  useEffect(() => {
+    const fetchRecords = async (type: 'observations' | 'medical' | 'feeding') => {
+      if (!id) return
+      
+      try {
+        setLoadingRecords(true)
+        let endpoint = ''
+        
+        switch (type) {
+          case 'observations':
+            endpoint = `/v1/observations?animal_id=${id}`
+            break
+          case 'medical':
+            endpoint = `/v1/medical-records?animal_id=${id}`
+            break
+          case 'feeding':
+            endpoint = `/v1/feeding-records?animal_id=${id}`
+            break
+        }
+
+        const response = await api.get(endpoint)
+        const data = (response as Record<string, unknown>)?.data || []
+        
+        switch (type) {
+          case 'observations':
+            setObservations(Array.isArray(data) ? data as Observation[] : [])
+            break
+          case 'medical':
+            setMedicalRecords(Array.isArray(data) ? data as MedicalRecord[] : [])
+            break
+          case 'feeding':
+            setFeedingRecords(Array.isArray(data) ? data as FeedingRecord[] : [])
+            break
+        }
+      } catch (error) {
+        console.error(`Error fetching ${type}:`, error)
+      } finally {
+        setLoadingRecords(false)
+      }
+    }
+
+    const loadRecords = async () => {
+      if (activeTab !== 'overview' && id) {
+        switch (activeTab) {
+          case 'observations':
+            await fetchRecords('observations')
+            break
+          case 'medical':
+            await fetchRecords('medical')
+            break
+          case 'feeding':
+            await fetchRecords('feeding')
+            break
+        }
+      }
+    }
+    
+    loadRecords()
+  }, [activeTab, id])
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -72,11 +123,21 @@ export const AnimalDetails = () => {
     })
   }
 
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: Heart },
-    { id: 'observations', label: 'Observations', icon: User },
-    { id: 'medical', label: 'Medical Records', icon: Heart },
-    { id: 'feeding', label: 'Feeding Records', icon: Scale },
+    { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'observations', label: 'Observations', icon: Eye },
+    { id: 'medical', label: 'Medical Records', icon: Stethoscope },
+    { id: 'feeding', label: 'Feeding Records', icon: Utensils },
   ]
 
   if (loading) {
@@ -126,107 +187,7 @@ export const AnimalDetails = () => {
             <Header title={animal.name} subtitle={`${animal.species} • ${animal.sex}`} />
           </div>
 
-          {/* Animal Profile Card */}
-          <div className="bg-white rounded-lg shadow-sm border mb-6 overflow-hidden">
-            <div className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Animal Image */}
-                <div className="lg:w-64 lg:flex-shrink-0">
-                  <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <img 
-                      src="/images/logo-128.svg" 
-                      alt={animal.name} 
-                      className="h-32 w-32 object-contain" 
-                    />
-                  </div>
-                  <div className="mt-4 text-center">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      animal.sex === 'Male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
-                    }`}>
-                      {animal.sex}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Animal Details */}
-                <div className="flex-1">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <Calendar className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Age</div>
-                          <div className="font-medium">{animal.age} years</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Scale className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Weight</div>
-                          <div className="font-medium">{animal.weight} kg</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Habitat</div>
-                          <div className="font-medium">{animal.enclosure.enclosureName}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Home className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Enclosure Type</div>
-                          <div className="font-medium capitalize">{animal.enclosure.enclosureType}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <User className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Microchip ID</div>
-                          <div className="font-medium">{animal.microchipId}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Calendar className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Acquisition Date</div>
-                          <div className="font-medium">{formatDate(animal.acquisitionDate)}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Thermometer className="w-5 h-5 text-emerald-600" />
-                        <div>
-                          <div className="text-sm text-gray-500">Safety Level</div>
-                          <div className="font-medium capitalize">{animal.enclosure.safetyLevel}</div>
-                        </div>
-                      </div>
-
-                      {animal.enclosure.temperatureMinCelsius && animal.enclosure.temperatureMaxCelsius && (
-                        <div className="flex items-center space-x-3">
-                          <Thermometer className="w-5 h-5 text-emerald-600" />
-                          <div>
-                            <div className="text-sm text-gray-500">Temperature Range</div>
-                            <div className="font-medium">
-                              {animal.enclosure.temperatureMinCelsius}°C - {animal.enclosure.temperatureMaxCelsius}°C
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AnimalOverview animal={animal} formatDate={formatDate} />
 
           {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm border">
@@ -254,94 +215,82 @@ export const AnimalDetails = () => {
 
             <div className="p-6">
               {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Diet Plan</h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-gray-500">Diet Name</div>
-                          <div className="font-medium">{animal.dietPlan.dietName}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Age Category</div>
-                          <div className="font-medium capitalize">{animal.dietPlan.ageCategory}</div>
-                        </div>
-                        {animal.dietPlan.totalCaloriesPerDay && (
-                          <div>
-                            <div className="text-sm text-gray-500">Daily Calories</div>
-                            <div className="font-medium">{animal.dietPlan.totalCaloriesPerDay} kcal</div>
-                          </div>
-                        )}
-                        {animal.dietPlan.feedingFrequencyPerDay && (
-                          <div>
-                            <div className="text-sm text-gray-500">Feeding Frequency</div>
-                            <div className="font-medium">{animal.dietPlan.feedingFrequencyPerDay} times/day</div>
-                          </div>
-                        )}
-                      </div>
-                      {animal.dietPlan.specialConditions && (
-                        <div>
-                          <div className="text-sm text-gray-500">Special Conditions</div>
-                          <div className="font-medium">{animal.dietPlan.specialConditions}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {animal.distinguishingMarks && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">Distinguishing Marks</h3>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p>{animal.distinguishingMarks}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <DietPlanOverview animal={animal} />
               )}
 
               {activeTab === 'observations' && (
-                <div className="text-center py-12">
-                  <div className="mb-4">
-                    <User className="w-12 h-12 text-gray-400 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Observations</h3>
-                  <p className="text-gray-600 mb-6">Track behavioral and health observations for {animal.name}</p>
-                  <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                    Add Observation
-                  </button>
-                </div>
+                <ObservationsList 
+                  animal={animal}
+                  observations={observations}
+                  loadingRecords={loadingRecords}
+                  onAddObservation={() => setActiveModal('observation')}
+                  formatDateTime={formatDateTime}
+                />
               )}
 
               {activeTab === 'medical' && (
-                <div className="text-center py-12">
-                  <div className="mb-4">
-                    <Heart className="w-12 h-12 text-gray-400 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Medical Records</h3>
-                  <p className="text-gray-600 mb-6">Manage medical history and health records for {animal.name}</p>
-                  <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                    Add Medical Record
-                  </button>
-                </div>
+                <MedicalRecordsList 
+                  animal={animal}
+                  medicalRecords={medicalRecords}
+                  loadingRecords={loadingRecords}
+                  onAddMedicalRecord={() => setActiveModal('medical')}
+                  formatDate={formatDate}
+                />
               )}
 
               {activeTab === 'feeding' && (
-                <div className="text-center py-12">
-                  <div className="mb-4">
-                    <Scale className="w-12 h-12 text-gray-400 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Feeding Records</h3>
-                  <p className="text-gray-600 mb-6">Track feeding schedules and nutrition for {animal.name}</p>
-                  <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                    Add Feeding Record
-                  </button>
-                </div>
+                <FeedingRecordsList 
+                  animal={animal}
+                  feedingRecords={feedingRecords}
+                  loadingRecords={loadingRecords}
+                  onAddFeedingRecord={() => setActiveModal('feeding')}
+                  formatDateTime={formatDateTime}
+                />
               )}
             </div>
           </div>
         </main>
       </div>
+
+      {/* Modals */}
+      <AddFeedingRecordModal
+        isOpen={activeModal === 'feeding'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          // Refresh feeding records
+          if (activeTab === 'feeding') {
+            setActiveTab('overview')
+            setTimeout(() => setActiveTab('feeding'), 100)
+          }
+        }}
+        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
+      />
+
+      <AddMedicalRecordModal
+        isOpen={activeModal === 'medical'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          // Refresh medical records
+          if (activeTab === 'medical') {
+            setActiveTab('overview')
+            setTimeout(() => setActiveTab('medical'), 100)
+          }
+        }}
+        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
+      />
+
+      <AddObservationModal
+        isOpen={activeModal === 'observation'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          // Refresh observations
+          if (activeTab === 'observations') {
+            setActiveTab('overview')
+            setTimeout(() => setActiveTab('observations'), 100)
+          }
+        }}
+        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
+      />
     </div>
   )
 }

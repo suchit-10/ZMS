@@ -27,7 +27,6 @@ export const Animals = () => {
       try {
         const res = await api.get<AnimalsResponse>('/v1/animals')
         const list = (res && (res as AnimalsResponse).data) || []
-        // map to Animal shape used by AnimalCard
         const mapped: Animal[] = list.map((a: Record<string, unknown>) => ({
           id: String(a._id ?? a.id ?? ''),
           name: String(a.name ?? ''),
@@ -49,7 +48,6 @@ export const Animals = () => {
       }
     }
 
-    // Load once on mount
     if (!initialLoaded.current) {
       load()
     }
@@ -61,7 +59,6 @@ export const Animals = () => {
     }
   }, [])
 
-  // Frontend search filtering
   const filtered = useMemo(() => {
     if (!query) return animals
     const q = query.toLowerCase()
@@ -83,7 +80,6 @@ export const Animals = () => {
             {isRefreshing && <div className="ml-4 text-sm text-gray-600">Refreshing…</div>}
           </div>
 
-          {/* Add Animal fixed top-right when we have animals */}
           {animals.length > 0 && (
             <div className="fixed top-6 right-6 z-50">
               <AddAnimalButton />
@@ -105,7 +101,6 @@ export const Animals = () => {
                   <h3 className="text-xl font-semibold mb-2">No animals yet</h3>
                   <p className="text-sm text-gray-600 mb-6">There are no animals registered. Add your first animal to get started.</p>
                   <div className="mt-4">
-                    {/* Place Add Animal button here when no animals */}
                     <AddAnimalButton />
                   </div>
                 </div>
