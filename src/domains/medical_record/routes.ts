@@ -77,7 +77,7 @@ medicalRecordRouter.get('/:id', async (req: AuthenticatedRequest, res: Response)
 });
 
 // GET /by-animal - Get all medical records by animal ID
-medicalRecordRouter.get('/by-animal', async (req: AuthenticatedRequest, res: Response) => {
+medicalRecordRouter.get('/', async (req: AuthenticatedRequest, res: Response) => {
   const queryValidation = validateData<AnimalMedicalRecordsQuery>(req.query, AnimalMedicalRecordsQuerySchema);
   
   if (!queryValidation.success) {
