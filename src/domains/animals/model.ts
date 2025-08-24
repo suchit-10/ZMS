@@ -36,7 +36,6 @@ const EnclosureSchema = new Schema({
   status: { type: String, enum: ["active", "maintenance", "closed"], default: "active" },
 });
 
-
 export interface IAnimal extends Document {
   name: string;
   species: string;
@@ -53,7 +52,6 @@ export interface IAnimal extends Document {
   extraAttributes?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
-
   enclosure: typeof EnclosureSchema;
   dietPlan: typeof DietPlanSchema;
 }
@@ -69,7 +67,7 @@ const AnimalSchema = new Schema<IAnimal>({
   causeOfDeath: { type: String },
   distinguishingMarks: { type: String },
   images: { type: String},
-  microchipId: { type: String, unique: true },
+  microchipId: { type: String, unique: true ,required:true},
   weight:{type:Number,required:true},
   extraAttributes: { type: Schema.Types.Mixed },
   enclosure: { type: EnclosureSchema, required: true },
