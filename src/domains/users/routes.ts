@@ -11,10 +11,11 @@ import {
   UpdateUserRequest,
   UserQuery 
 } from './dto';
+import { getAllUsers, getUserById } from './service';
 
 const userRouter = Router();
 
-userRouter.get('/', (req: AuthenticatedRequest, res: Response) => {
+userRouter.get('/', async (req: AuthenticatedRequest, res: Response) => {
   const queryValidation = validateData<UserQuery>(req.query, UserQuerySchema);
   
   if (!queryValidation.success) {
@@ -25,17 +26,24 @@ userRouter.get('/', (req: AuthenticatedRequest, res: Response) => {
     return
   }
 
-  const { page = 1, limit = 10, search } = queryValidation.data!;
-  
-  res.json({ 
-    message: 'Get all users', 
-    user: req.claims,
-    pagination: { page, limit },
-    search 
-  });
+  try {
+    const { page = 1, limit = 10, search } = queryValidation.data!;
+    const result = await getAllUsers(page, limit, search);
+    
+    res.json({
+      message: 'Users retrieved successfully',
+      data: result.users,
+      pagination: result.pagination
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to retrieve users',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
-userRouter.get('/:id', (req: AuthenticatedRequest, res: Response) => {
+userRouter.get('/:userId', async (req: AuthenticatedRequest, res: Response) => {
   const paramsValidation = validateData<UserParams>(req.params, UserParamsSchema);
   
   if (!paramsValidation.success) {
@@ -46,8 +54,27 @@ userRouter.get('/:id', (req: AuthenticatedRequest, res: Response) => {
     return
   }
 
-  const { userId } = paramsValidation.data!;
-  res.json({ message: `Get user ${userId}`, user: req.claims });
+  try {
+    const { userId } = paramsValidation.data!;
+    const user = await getUserById(userId);
+    
+    if (!user) {
+      res.status(404).json({
+        message: 'User not found'
+      });
+      return;
+    }
+
+    res.json({
+      message: 'User retrieved successfully',
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to retrieve user',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 userRouter.post('/', (req: AuthenticatedRequest, res: Response) => {

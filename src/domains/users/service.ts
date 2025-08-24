@@ -56,13 +56,60 @@ export async function authenticateUser(credentials: SignInRequest): Promise<{ su
   }
 }
 
- async function getUserById(id: string): Promise<IUser | null> {
+export async function getUserById(id: string): Promise<IUser | null> {
   try {
-     const user =  await User.findById(id);
-
+     const user = await User.findById(id).select('-password');
      return user;
   } catch (error) {
     console.error('Error finding user by ID:', error);
     return null;
+  }
+}
+
+export async function getAllUsers(page = 1, limit = 10, search?: string): Promise<{
+  users: IUser[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}> {
+  try {
+    const skip = (page - 1) * limit;
+    
+    // Build query filter
+    const filter: any = { isActive: true };
+    
+    if (search) {
+      filter.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
+    };
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    throw new Error('Failed to retrieve users');
   }
 }
