@@ -1,4 +1,4 @@
-import { Home, List, FilePlus, BarChart2, Repeat, Settings, Menu, X } from 'lucide-react'
+import { Home, List, Users, Menu, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -7,11 +7,8 @@ export default function Sidebar() {
 
   const items = [
     { to: '/', label: 'Dashboard', icon: Home },
-    { to: '/animals', label: 'All Animals', icon: List },
-    { to: '/quick-entry', label: 'Quick Entry', icon: FilePlus },
-    { to: '/reports', label: 'Animal Reports', icon: BarChart2 },
-    { to: '/transfers', label: 'Transfers', icon: Repeat },
-    { to: '/settings', label: 'Settings', icon: Settings },
+    { to: '/animals', label: 'Animals', icon: List },
+    { to: '/users', label: 'Users', icon: Users },
   ]
 
   return (
@@ -20,7 +17,7 @@ export default function Sidebar() {
         <Menu className="w-5 h-5 text-emerald-600" />
       </button>
 
-      <aside className={`${open ? 'fixed left-0 top-0 bottom-0 z-50 w-56' : 'hidden'} md:block md:relative md:w-52 bg-white/90 border-r border-white/40 p-4`}>
+      <aside className={`${open ? 'fixed left-0 top-0 bottom-0 z-50 w-56' : 'hidden'} md:fixed md:left-0 md:top-0 md:bottom-0 md:block md:w-52 bg-white/90 border-r border-white/40 p-4 overflow-y-auto`}>
         {/* mobile close button inside drawer */}
         <div className="md:hidden flex justify-end">
           <button onClick={() => setOpen(false)} aria-label="Close menu" className="p-2 rounded bg-gray-100">

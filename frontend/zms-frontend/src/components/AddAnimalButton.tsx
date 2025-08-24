@@ -1,9 +1,11 @@
-import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const AddAnimalButton: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
+const AddAnimalButton: React.FC = () => {
+  const navigate = useNavigate()
+  
   return (
     <button
-      onClick={onClick}
+      onClick={() => navigate('/animals/add')}
       className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm shadow-md"
       style={{ boxShadow: '0 2px 6px rgba(16, 185, 129, 0.12)' }}
     >

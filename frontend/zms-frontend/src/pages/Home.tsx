@@ -40,7 +40,7 @@ export const Home = () => {
       <div className="flex">
         <Sidebar />
 
-        <main className="flex-1 p-6 pt-8 md:pt-6">
+        <main className="flex-1 p-6 pt-8 md:pt-6 md:ml-52">
           <Header
             title="Dashboard"
             subtitle="Management system recent entries"

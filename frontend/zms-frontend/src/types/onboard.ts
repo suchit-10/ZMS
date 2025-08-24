@@ -3,6 +3,8 @@ export interface AnimalPayload {
   species?: string
   sex?: string
   age?: number | string
+  microchipId?: string
+  weight?: number | string
   acquisitionDate?: string
   acquisitionType?: string
   image?: string

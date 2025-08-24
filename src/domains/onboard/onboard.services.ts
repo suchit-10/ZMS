@@ -36,7 +36,7 @@ export const onboardService = async (payload: OnboardRequest): Promise<IAnimal> 
         specialConditions: payload.dietPlan.specialConditions,
         totalCaloriesPerDay: payload.dietPlan.totalCaloriesPerDay,
         feedingFrequencyPerDay: payload.dietPlan.feedingFrequencyPerDay,
-        dietItems: payload.dietPlan.dietItems,
+        dietItems: payload.dietPlan.dietItems || [],
       }
     };
 
