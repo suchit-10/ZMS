@@ -1,5 +1,5 @@
 import z from "zod";
-import { DietItemDTO } from "../diet/dto";
+import { DietItemDTO } from "../animals/dto";
 
 export const OnboardSchema = z.object({
   animal: z.object({
@@ -10,7 +10,6 @@ export const OnboardSchema = z.object({
     acquisitionDate: z.string(),
     acquisitionType: z.string(),
     microchipId: z.string(),
-    tatoo: z.string().optional(),
     weight: z.number(),
   }),
   enclosure: z.object({

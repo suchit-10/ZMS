@@ -16,7 +16,6 @@ export const onboardService = async (payload: OnboardRequest): Promise<IAnimal> 
       weight: payload.animal.weight,
       microchipId: payload.animal.microchipId,
       
-      
       enclosure: {
         enclosureName: payload.enclosure.enclosureName,
         enclosureType: payload.enclosure.enclosureType,
