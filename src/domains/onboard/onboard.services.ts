@@ -18,7 +18,7 @@ export const onboardService = async (payload: OnboardRequest): Promise<IAnimal> 
   images: (payload as any).animal.images,
       
       // Extract microchipId from nested identification object
-      microchipId: payload.animal.identification?.microchipId,
+      microchipId: payload.animal.microchipId,
       
       // Embedded enclosure document
       enclosure: {
