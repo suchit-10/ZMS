@@ -16,7 +16,7 @@ export const onboardAnimal = async (req: AuthenticatedRequest, res: Response) =>
       return;
     }
 
-    const response =  await onboardService(data.data!)
+  const response =  await onboardService(data.data!)
 
     res.status(201).json({
       success: true,

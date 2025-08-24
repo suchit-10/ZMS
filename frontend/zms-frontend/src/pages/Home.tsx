@@ -1,160 +1,87 @@
+import Sidebar from '../components/Sidebar'
+import ActivityItem from '../components/ActivityItem'
+import Header from '../components/Header'
+import StatsCard from '../components/StatsCard'
 import { useAuth } from '../contexts/AuthContext'
 
 export const Home = () => {
-  const { user, signOut } = useAuth()
+  const { signOut } = useAuth()
 
-  const stats = [
-    { label: 'Total Animals', value: '127', icon: '🦁' },
-    { label: 'Active Enclosures', value: '15', icon: '🏠' },
-    { label: 'Staff Members', value: '24', icon: '👥' },
-    { label: 'Daily Reports', value: '8', icon: '📊' },
+  // Mock data — replace with real data hooks / API calls later
+  const totalAnimals = 248
+  const entriesToday = 17
+  // staffActive removed per request
+
+  const recent = [
+    { animal: 'Simba', species: 'Male Lion', action: 'Morning feeding logged', timeAgo: '2 hours ago', staff: 'Dr. Sarah', photo: '/images/logo-64.svg', type: 'feeding' as const },
+    { animal: 'Molly', species: 'Penguin', action: 'Feeding logged', timeAgo: '3 hours ago', staff: 'Mark Williams', photo: '/images/logo-64.svg', type: 'feeding' as const },
+    { animal: 'Max', species: 'Tiger', action: 'Health observation recorded', timeAgo: '4 hours ago', staff: 'Dr. Sarah', photo: '/images/logo-64.svg', type: 'observation' as const },
+    { animal: 'Bella', species: 'Elephant', action: 'Weight measured', timeAgo: '5 hours ago', staff: 'Maintenance Team', photo: '/images/logo-64.svg', type: 'measurement' as const },
+    { animal: 'Koko', species: 'Gorilla', action: 'Vaccination given', timeAgo: '6 hours ago', staff: 'Dr. Anna', photo: '/images/logo-64.svg', type: 'vaccination' as const },
+    { animal: 'Zara', species: 'Zebra', action: 'Feeding logged', timeAgo: '7 hours ago', staff: 'Mark Williams', photo: '/images/logo-64.svg', type: 'feeding' as const },
+    { animal: 'Penny', species: 'Parrot', action: 'Observation recorded', timeAgo: '8 hours ago', staff: 'Alex', photo: '/images/logo-64.svg', type: 'observation' as const },
+    { animal: 'Sam', species: 'Snake', action: 'Medical check recorded', timeAgo: '9 hours ago', staff: 'Dr. Lee', photo: '/images/logo-64.svg', type: 'medical' as const },
   ]
 
-  const quickActions = [
-    { 
-      title: 'Animal Onboarding', 
-      description: 'Register new animals with details, enclosure, and diet plans',
-      icon: '➕',
-      action: () => console.log('Navigate to animal onboarding')
-    },
-    { 
-      title: 'Daily Care Records', 
-      description: 'Submit daily observations and feeding records',
-      icon: '📝',
-      action: () => console.log('Navigate to care records')
-    },
-    { 
-      title: 'Medical Records', 
-      description: 'View and update animal medical history',
-      icon: '🏥',
-      action: () => console.log('Navigate to medical records')
-    },
-    { 
-      title: 'Analytics Dashboard', 
-      description: 'View insights and reports across the zoo',
-      icon: '📈',
-      action: () => console.log('Navigate to analytics')
-    },
-  ]
-
-  const recentActivities = [
-    { activity: 'Leo (Lion) - Daily observation submitted', time: '2 hours ago', type: 'observation' },
-    { activity: 'New animal: Bella (Elephant) registered', time: '4 hours ago', type: 'registration' },
-    { activity: 'Medical checkup completed for Max (Tiger)', time: '6 hours ago', type: 'medical' },
-    { activity: 'Diet plan updated for Penguins enclosure', time: '1 day ago', type: 'diet' },
-  ]
+  const summary = {
+    byType: { Feeding: 8, Medical: 3, Observations: 4, Vaccinations: 2 },
+    mostActive: ['Simba', 'Molly', 'Bella'],
+    staff: ['Dr. Sarah', 'Mark Williams', 'Dr. Anna']
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.username}! 👋
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here's what's happening at the zoo today
-          </p>
-        </div>
-        <button
-          onClick={signOut}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          Sign Out
-        </button>
-      </div>
+    <div
+      className="min-h-screen overflow-x-hidden"
+      style={{
+        background:
+          'linear-gradient(135deg, #e6f4e6 0%, #f2fff4 50%, #dff0df 100%)',
+      }}
+    >
+      <div className="flex">
+        <Sidebar />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-6 border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
-              </div>
-              <div className="text-3xl">{stat.icon}</div>
-            </div>
+        <main className="flex-1 p-6 pt-8 md:pt-6 md:ml-52">
+          <Header
+            title="Dashboard"
+            subtitle="Management system recent entries"
+            actions={<button onClick={signOut} className="px-3 py-1 rounded bg-red-600 text-white text-sm">Sign Out</button>}
+          />
+
+          {/* Top Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <StatsCard label="Total Animals" value={totalAnimals} />
+            <StatsCard label="Entries Today" value={entriesToday} />
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quickActions.map((action, index) => (
-              <div
-                key={index}
-                onClick={action.action}
-                className="bg-white rounded-lg shadow-sm p-6 border hover:shadow-md transition-shadow cursor-pointer hover:border-blue-200"
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="text-2xl">{action.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 mb-1">{action.title}</h3>
-                    <p className="text-sm text-gray-600">{action.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activities</h2>
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-4">
-              <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.type === 'observation' ? 'bg-blue-500' :
-                      activity.type === 'registration' ? 'bg-green-500' :
-                      activity.type === 'medical' ? 'bg-red-500' :
-                      'bg-yellow-500'
-                    }`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">{activity.activity}</p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Recent Activity Feed */}
+            <section className="lg:col-span-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h2>
+              <div className="bg-white rounded-lg shadow-sm border p-4 space-y-2">
+                {recent.map((r, i) => (
+                  <ActivityItem key={i} {...r} />
                 ))}
               </div>
-            </div>
-            <div className="border-t px-4 py-3">
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                View all activities →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            </section>
 
-      {/* Emergency Alert Section */}
-      <div className="mt-8">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <span className="text-amber-600 text-xl">⚠️</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-amber-800">
-                Daily Checklist Reminder
-              </h3>
-              <p className="text-sm text-amber-700 mt-1">
-                Don't forget to complete today's animal welfare checks and feeding schedules.
-              </p>
-            </div>
-            <div className="ml-auto">
-              <button className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm transition-colors">
-                View Checklist
-              </button>
-            </div>
+            {/* Today's Summary */}
+            <aside>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Today's Summary</h2>
+              <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Entries by Type</h3>
+                  <ul className="mt-2 text-sm text-gray-600 space-y-1">
+                    {Object.entries(summary.byType).map(([k, v]) => (
+                      <li key={k} className="flex justify-between"><span>{k}</span><span>{v}</span></li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Removed Most Active Animals and Active Staff as requested */}
+              </div>
+            </aside>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )

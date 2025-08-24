@@ -14,6 +14,8 @@ export const onboardService = async (payload: OnboardRequest): Promise<IAnimal> 
       acquisitionDate: payload.animal.acquisitionDate,
       acquisitionType: payload.animal.acquisitionType,
       weight: payload.animal.weight,
+  // image path if provided by controller (e.g. /uploads/123-filename.jpg)
+  images: (payload as any).animal.images,
       
       // Extract microchipId from nested identification object
       microchipId: payload.animal.microchipId,
@@ -34,7 +36,7 @@ export const onboardService = async (payload: OnboardRequest): Promise<IAnimal> 
         specialConditions: payload.dietPlan.specialConditions,
         totalCaloriesPerDay: payload.dietPlan.totalCaloriesPerDay,
         feedingFrequencyPerDay: payload.dietPlan.feedingFrequencyPerDay,
-        dietItems: payload.dietPlan.dietItems,
+        dietItems: payload.dietPlan.dietItems || [],
       }
     };
 
