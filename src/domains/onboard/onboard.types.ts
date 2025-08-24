@@ -11,10 +11,9 @@ export const OnboardSchema = z.object({
     acquisitionType: z.string(),
     identification: z
       .object({
-        microchipId: z.string().optional(),
+        microchipId: z.string(),
         tatoo: z.string().optional(),
-      })
-      .optional(),
+      }),
     weight: z.number(),
   }),
   enclosure: z.object({
