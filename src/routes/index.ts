@@ -7,6 +7,7 @@ import observationRoutes from '../domains/observations/routes';
 import medicalRecordRoutes from '../domains/medical_record/routes';
 import feedingRecordRoutes from '../domains/food/routes';
 import animalRoutes from '../domains/animals/routes';
+import analyticsRoutes from '../domains/analytics/routes';
 
 const apiRouter = Router();
 const protectedRouter = Router();
@@ -20,6 +21,7 @@ protectedRouter.use('/observations', observationRoutes);
 protectedRouter.use('/medical-records', medicalRecordRoutes);
 protectedRouter.use('/feeding-records', feedingRecordRoutes);
 protectedRouter.use('/animals', animalRoutes);
+protectedRouter.use('/analytics', analyticsRoutes);
 
 apiRouter.use(protectedRouter);
 
