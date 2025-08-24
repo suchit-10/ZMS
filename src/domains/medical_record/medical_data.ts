@@ -1,5 +1,3 @@
-
-
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMedicalRecord extends Document {
