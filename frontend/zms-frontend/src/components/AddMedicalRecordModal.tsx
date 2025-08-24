@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import Modal from './Modal'
-import AnimalSelector from './AnimalSelector'
 import ExaminationTypeSelector from './ExaminationTypeSelector'
 import VitalSignsSection from './VitalSignsSection'
 import MedicalDetailsSection from './MedicalDetailsSection'
@@ -17,7 +16,7 @@ interface AddMedicalRecordModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  preSelectedAnimal?: Animal
+  preSelectedAnimal: Animal
 }
 
 interface MedicalFormData {
@@ -45,7 +44,7 @@ export const AddMedicalRecordModal = ({
   preSelectedAnimal 
 }: AddMedicalRecordModalProps) => {
   const [formData, setFormData] = useState<MedicalFormData>({
-    animal_id: preSelectedAnimal?._id || '',
+    animal_id: preSelectedAnimal._id,
     examination_date: '',
     examination_type: 'routine',
     veterinarian_name: '',
@@ -65,16 +64,8 @@ export const AddMedicalRecordModal = ({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { push } = useToast()
 
-  const handleAnimalSelect = useCallback((animalId: string) => {
-    setFormData(prev => ({ ...prev, animal_id: animalId }))
-  }, [])
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-
-    if (!formData.animal_id) {
-      newErrors.animal_id = 'Animal selection is required'
-    }
     if (!formData.examination_date) {
       newErrors.examination_date = 'Examination date is required'
     }
@@ -105,7 +96,7 @@ export const AddMedicalRecordModal = ({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent, saveAndAddAnother = false) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!validateForm()) return
@@ -133,32 +124,9 @@ export const AddMedicalRecordModal = ({
 
       await api.post('/v1/medical-records', submitData)
       
-      if (saveAndAddAnother) {
-        // Reset form but keep animal selection
-        setFormData({
-          ...formData,
-          examination_date: '',
-          examination_type: 'routine',
-          veterinarian_name: '',
-          weight_kg: '',
-          temperature_celsius: '',
-          heart_rate_bpm: '',
-          respiratory_rate_per_min: '',
-          symptoms: '',
-          diagnosis: '',
-          treatment: '',
-          medications: '',
-          follow_up_required: false,
-          follow_up_date: '',
-          notes: ''
-        })
-        setErrors({})
-        push('Medical record created successfully!', 'success')
-      } else {
-        push('Medical record created successfully!', 'success')
-        onSuccess()
-        onClose()
-      }
+      push('Medical record created successfully!', 'success')
+      onSuccess()
+      onClose()
     } catch (error) {
       console.error('Error creating medical record:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to save medical record. Please try again.'
@@ -171,7 +139,7 @@ export const AddMedicalRecordModal = ({
 
   const resetForm = () => {
     setFormData({
-      animal_id: preSelectedAnimal?._id || '',
+      animal_id: preSelectedAnimal._id,
       examination_date: '',
       examination_type: 'routine',
       veterinarian_name: '',
@@ -197,23 +165,23 @@ export const AddMedicalRecordModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Medical Record" maxWidth="max-w-4xl">
-      <form onSubmit={(e) => handleSubmit(e)} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {errors.submit && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">{errors.submit}</p>
           </div>
         )}
 
-        {/* Animal Selection */}
-        <AnimalSelector
-          selectedAnimalId={formData.animal_id}
-          onAnimalSelect={handleAnimalSelect}
-          preSelectedAnimal={preSelectedAnimal}
-          disabled={!!preSelectedAnimal}
-        />
-        {errors.animal_id && (
-          <p className="text-red-500 text-sm mt-1">{errors.animal_id}</p>
-        )}
+        {/* Animal Info Display */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Animal
+          </label>
+          <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+            <span className="font-medium">{preSelectedAnimal.name}</span>
+            <span className="text-gray-500 ml-2">({preSelectedAnimal.species})</span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Examination Date */}
@@ -304,14 +272,6 @@ export const AddMedicalRecordModal = ({
             className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? 'Saving...' : 'Save'}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSubmit(e, true)}
-            disabled={submitting || !formData.animal_id}
-            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {submitting ? 'Saving...' : 'Save & Add Another'}
           </button>
         </div>
       </form>

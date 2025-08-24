@@ -1,7 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import Modal from './Modal'
-import AnimalSelector from './AnimalSelector'
 import { api } from '../lib/http-client'
 import { useToast } from './toast/ToastContext'
 
@@ -15,7 +14,7 @@ interface AddFeedingRecordModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  preSelectedAnimal?: Animal
+  preSelectedAnimal: Animal
 }
 
 interface FeedingFormData {
@@ -74,7 +73,7 @@ export const AddFeedingRecordModal = ({
   preSelectedAnimal 
 }: AddFeedingRecordModalProps) => {
   const [formData, setFormData] = useState<FeedingFormData>({
-    animal_id: preSelectedAnimal?._id || '',
+    animal_id: preSelectedAnimal._id,
     feeding_at: '',
     diet_item_id: '',
     quantity_given_grams: '',
@@ -87,16 +86,8 @@ export const AddFeedingRecordModal = ({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { push } = useToast()
 
-  const handleAnimalSelect = useCallback((animalId: string) => {
-    setFormData(prev => ({ ...prev, animal_id: animalId }))
-  }, [])
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-
-    if (!formData.animal_id) {
-      newErrors.animal_id = 'Animal selection is required'
-    }
     if (!formData.feeding_at) {
       newErrors.feeding_at = 'Feeding time is required'
     }
@@ -113,7 +104,7 @@ export const AddFeedingRecordModal = ({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent, saveAndAddAnother = false) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!validateForm()) return
@@ -134,25 +125,9 @@ export const AddFeedingRecordModal = ({
 
       await api.post('/v1/feeding-records', submitData)
       
-      if (saveAndAddAnother) {
-        // Reset form but keep animal selection
-        setFormData({
-          ...formData,
-          feeding_at: '',
-          diet_item_id: '',
-          quantity_given_grams: '',
-          quantity_consumed_grams: '',
-          staff_id: '',
-          appetite_rating: 'good',
-          behavioral_notes: ''
-        })
-        setErrors({})
-        push('Feeding record created successfully!', 'success')
-      } else {
-        push('Feeding record created successfully!', 'success')
-        onSuccess()
-        onClose()
-      }
+      push('Feeding record created successfully!', 'success')
+      onSuccess()
+      onClose()
     } catch (error) {
       console.error('Error creating feeding record:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to save feeding record. Please try again.'
@@ -165,7 +140,7 @@ export const AddFeedingRecordModal = ({
 
   const resetForm = () => {
     setFormData({
-      animal_id: preSelectedAnimal?._id || '',
+      animal_id: preSelectedAnimal._id,
       feeding_at: '',
       diet_item_id: '',
       quantity_given_grams: '',
@@ -184,23 +159,23 @@ export const AddFeedingRecordModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Feeding Record" maxWidth="max-w-4xl">
-      <form onSubmit={(e) => handleSubmit(e)} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {errors.submit && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">{errors.submit}</p>
           </div>
         )}
 
-        {/* Animal Selection */}
-        <AnimalSelector
-          selectedAnimalId={formData.animal_id}
-          onAnimalSelect={handleAnimalSelect}
-          preSelectedAnimal={preSelectedAnimal}
-          disabled={!!preSelectedAnimal}
-        />
-        {errors.animal_id && (
-          <p className="text-red-500 text-sm mt-1">{errors.animal_id}</p>
-        )}
+        {/* Animal Info Display */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Animal
+          </label>
+          <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+            <span className="font-medium">{preSelectedAnimal.name}</span>
+            <span className="text-gray-500 ml-2">({preSelectedAnimal.species})</span>
+          </div>
+        </div>
 
         {/* Feeding Time */}
         <div>
@@ -219,36 +194,6 @@ export const AddFeedingRecordModal = ({
           {errors.feeding_at && (
             <p className="text-red-500 text-sm mt-1">{errors.feeding_at}</p>
           )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Diet Item ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Diet Item ID
-            </label>
-            <input
-              type="text"
-              placeholder="Optional diet item identifier"
-              value={formData.diet_item_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, diet_item_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Staff ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Staff ID
-            </label>
-            <input
-              type="text"
-              placeholder="Staff member identifier"
-              value={formData.staff_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, staff_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
         </div>
 
         {/* Food Quantity */}
@@ -351,28 +296,20 @@ export const AddFeedingRecordModal = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={submitting || !formData.animal_id}
-            className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={submitting}
+            className="px-6 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? 'Saving...' : 'Save'}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSubmit(e, true)}
-            disabled={submitting || !formData.animal_id}
-            className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {submitting ? 'Saving...' : 'Save & Add Another'}
           </button>
         </div>
       </form>

@@ -22,19 +22,28 @@ interface AnimalFormData {
 }
 
 interface EnclosureFormData {
-  enclosureNumber: string
-  enclosureSize: string
+  enclosureName: string
   enclosureType: string
-  enclosureCapacity: string
-  notes: string
+  temperatureMinCelsius: string
+  temperatureMaxCelsius: string
+  safetyLevel: string
+}
+
+interface DietItemData {
+  foodItem: string
+  quantityInGrams: string
+  feedingTime: string
+  preparationInstructions: string
+  nutritionNotes: string
 }
 
 interface DietFormData {
-  dietType: string
-  specialDiet: string
-  feedingFrequency: string
-  feedingTime: string[]
-  dietNotes: string
+  dietName: string
+  ageCategory: 'adult' | 'senior'
+  specialConditions: string
+  totalCaloriesPerDay: string
+  feedingFrequencyPerDay: string
+  dietItems: DietItemData[]
 }
 
 export const AddAnimal = () => {
@@ -56,19 +65,20 @@ export const AddAnimal = () => {
   })
 
   const [enclosureData, setEnclosureData] = useState<EnclosureFormData>({
-    enclosureNumber: '',
-    enclosureSize: '',
+    enclosureName: '',
     enclosureType: '',
-    enclosureCapacity: '',
-    notes: ''
+    temperatureMinCelsius: '',
+    temperatureMaxCelsius: '',
+    safetyLevel: ''
   })
 
   const [dietData, setDietData] = useState<DietFormData>({
-    dietType: '',
-    specialDiet: '',
-    feedingFrequency: '',
-    feedingTime: [],
-    dietNotes: ''
+    dietName: '',
+    ageCategory: 'adult',
+    specialConditions: '',
+    totalCaloriesPerDay: '',
+    feedingFrequencyPerDay: '',
+    dietItems: []
   })
 
   const steps = [
@@ -100,14 +110,13 @@ export const AddAnimal = () => {
       if (!animalData.acquisitionDate.trim()) newErrors.acquisitionDate = 'Acquisition date is required'
     } else if (currentStep === 1) {
       // Enclosure validation
-      if (!enclosureData.enclosureNumber.trim()) newErrors.enclosureNumber = 'Enclosure number is required'
-      if (!enclosureData.enclosureSize.trim()) newErrors.enclosureSize = 'Enclosure size is required'
+      if (!enclosureData.enclosureName.trim()) newErrors.enclosureName = 'Enclosure name is required'
       if (!enclosureData.enclosureType.trim()) newErrors.enclosureType = 'Enclosure type is required'
-      if (!enclosureData.enclosureCapacity.trim()) newErrors.enclosureCapacity = 'Enclosure capacity is required'
+      if (!enclosureData.safetyLevel.trim()) newErrors.safetyLevel = 'Safety level is required'
     } else if (currentStep === 2) {
       // Diet validation
-      if (!dietData.dietType.trim()) newErrors.dietType = 'Diet type is required'
-      if (!dietData.feedingFrequency.trim()) newErrors.feedingFrequency = 'Feeding frequency is required'
+      if (!dietData.dietName.trim()) newErrors.dietName = 'Diet name is required'
+      if (!dietData.feedingFrequencyPerDay.trim()) newErrors.feedingFrequencyPerDay = 'Feeding frequency is required'
     }
     
     setErrors(newErrors)
@@ -141,21 +150,25 @@ export const AddAnimal = () => {
           weight: parseFloat(animalData.weight) || 0
         },
         enclosure: {
-          enclosureName: enclosureData.enclosureNumber, // Map enclosureNumber to enclosureName
+          enclosureName: enclosureData.enclosureName, // Map enclosureNumber to enclosureName
           enclosureType: enclosureData.enclosureType,
-          temperatureMinCelsius: parseFloat(enclosureData.enclosureSize) || undefined, // Temporarily using size as temp
-          temperatureMaxCelsius: parseFloat(enclosureData.enclosureCapacity) || undefined, // Temporarily using capacity as temp  
-          safetyLevel: 'restrictedAccess' // Default value since not in form
+          temperatureMinCelsius: parseFloat(enclosureData.temperatureMinCelsius) || undefined, // Temporarily using size as temp
+          temperatureMaxCelsius: parseFloat(enclosureData.temperatureMaxCelsius) || undefined, // Temporarily using capacity as temp  
+          safetyLevel: enclosureData.safetyLevel
         },
         dietPlan: {
-          dietName: dietData.dietType, // Map dietType to dietName
-          ageCategory: 'adult' as const, // Default value since not in form
-          specialConditions: dietData.specialDiet,
-          totalCaloriesPerDay: undefined, // Not in our form yet
-          feedingFrequencyPerDay: dietData.feedingFrequency === 'once-daily' ? 1 : 
-                                   dietData.feedingFrequency === 'twice-daily' ? 2 : 
-                                   dietData.feedingFrequency === 'three-times-daily' ? 3 : undefined,
-          dietItems: [] // Empty array as default
+          dietName: dietData.dietName,
+          ageCategory: dietData.ageCategory,
+          specialConditions: dietData.specialConditions || undefined,
+          totalCaloriesPerDay: dietData.totalCaloriesPerDay ? parseFloat(dietData.totalCaloriesPerDay) : undefined,
+          feedingFrequencyPerDay: dietData.feedingFrequencyPerDay ? parseInt(dietData.feedingFrequencyPerDay) : undefined,
+          dietItems: dietData.dietItems.map(item => ({
+            foodItem: item.foodItem,
+            quantityInGrams: parseFloat(item.quantityInGrams) || 0,
+            feedingTime: item.feedingTime,
+            preparationInstructions: item.preparationInstructions || undefined,
+            nutritionNotes: item.nutritionNotes || undefined
+          }))
         }
       }
 
@@ -239,7 +252,6 @@ export const AddAnimal = () => {
               currentStep={currentStep}
               steps={steps}
               isSubmitting={isSubmitting}
-              onCancel={() => navigate('/animals')}
               onBack={prevStep}
               onNext={nextStep}
               onSubmit={submit}

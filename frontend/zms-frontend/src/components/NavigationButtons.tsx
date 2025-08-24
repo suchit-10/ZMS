@@ -8,7 +8,6 @@ interface NavigationButtonsProps {
   currentStep: number
   steps: Step[]
   isSubmitting: boolean
-  onCancel: () => void
   onBack: () => void
   onNext: () => void
   onSubmit: () => void
@@ -18,7 +17,6 @@ const NavigationButtons = ({
   currentStep, 
   steps, 
   isSubmitting, 
-  onCancel, 
   onBack, 
   onNext, 
   onSubmit 
@@ -27,13 +25,6 @@ const NavigationButtons = ({
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <button 
-            type="button"
-            onClick={onCancel} 
-            className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
           {currentStep > 0 && (
             <button 
               type="button"

@@ -39,8 +39,8 @@ const FeedingRecordsList = ({
   formatDateTime 
 }: FeedingRecordsListProps) => {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <h3 className="text-lg font-semibold">Feeding Records</h3>
         <button 
           onClick={onAddFeedingRecord}
@@ -51,13 +51,14 @@ const FeedingRecordsList = ({
         </button>
       </div>
 
-      {loadingRecords ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading feeding records...</p>
-        </div>
-      ) : feedingRecords.length > 0 ? (
-        <div className="space-y-3">
+      <div className="flex-1 min-h-0">
+        {loadingRecords ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading feeding records...</p>
+          </div>
+        ) : feedingRecords.length > 0 ? (
+          <div className="h-full overflow-y-auto pr-2 space-y-3">
           {feedingRecords.map((record) => (
             <div key={record._id} className="bg-gray-50 rounded-lg p-4 border">
               {/* Header with Date and Appetite */}
@@ -114,14 +115,17 @@ const FeedingRecordsList = ({
               )}
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <Utensils className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Feeding Records Yet</h3>
-          <p className="text-gray-600 mb-6">Start tracking feeding schedules for {animal.name}</p>
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Utensils className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Feeding Records Yet</h3>
+              <p className="text-gray-600 mb-6">Start tracking feeding schedules for {animal.name}</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

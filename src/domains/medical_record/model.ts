@@ -20,6 +20,7 @@ export interface IMedicalRecord extends Document {
   follow_up_date?: Date;
   notes?: string;
   extra_attributes: Record<string, any>;
+  createdAt:Date
 }
 
 const MedicalRecordSchema = new Schema<IMedicalRecord>({

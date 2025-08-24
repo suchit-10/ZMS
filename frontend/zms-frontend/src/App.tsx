@@ -11,13 +11,29 @@ import { Login } from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./components/toast/ToastContext";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: true,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 export const App = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" storageKey="zms-ui-theme">
-        <AuthProvider>
-          <ToastProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ToastProvider>
             <Layout>
               <BrowserRouter>
                 <Routes>
@@ -58,7 +74,6 @@ export const App = () => {
                     path="/"
                     element={
                       <ProtectedRoute>
-                        {" "}
                         <Home />
                       </ProtectedRoute>
                     }
@@ -66,8 +81,9 @@ export const App = () => {
                 </Routes>
               </BrowserRouter>
             </Layout>
-          </ToastProvider>
-        </AuthProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

@@ -17,8 +17,8 @@ const MedicalRecordsList = ({
   formatDate 
 }: MedicalRecordsListProps) => {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <h3 className="text-lg font-semibold">Medical Records</h3>
         <button 
           onClick={onAddMedicalRecord}
@@ -29,13 +29,14 @@ const MedicalRecordsList = ({
         </button>
       </div>
 
-      {loadingRecords ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading medical records...</p>
-        </div>
-      ) : medicalRecords.length > 0 ? (
-        <div className="space-y-3">
+      <div className="flex-1 min-h-0">
+        {loadingRecords ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading medical records...</p>
+          </div>
+        ) : medicalRecords.length > 0 ? (
+          <div className="h-full overflow-y-auto pr-2 space-y-3">
           {medicalRecords.map((record) => (
             <div key={record._id} className="bg-gray-50 rounded-lg p-4 border">
               {/* Header with Date, Type and Follow-up */}
@@ -135,14 +136,17 @@ const MedicalRecordsList = ({
               )}
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Medical Records Yet</h3>
-          <p className="text-gray-600 mb-6">Start tracking medical history for {animal.name}</p>
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Medical Records Yet</h3>
+              <p className="text-gray-600 mb-6">Start tracking medical history for {animal.name}</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

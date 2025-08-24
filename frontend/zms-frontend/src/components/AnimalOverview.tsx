@@ -10,16 +10,16 @@ interface AnimalOverviewProps {
 
 const AnimalOverview = ({ animal, formatDate }: AnimalOverviewProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border mb-6 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border mb-6 overflow-hidden h-[35%] ">
       <div className="p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Animal Image */}
           <div className="lg:w-64 lg:flex-shrink-0">
-            <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="h-[100%] bg-gray-100 rounded-lg flex items-center justify-center">
               <img 
                 src="/images/logo-128.svg" 
                 alt={animal.name} 
-                className="h-32 w-32 object-contain" 
+                className="h-20 w-20 object-contain" 
               />
             </div>
             <div className="mt-4 text-center">
@@ -33,7 +33,7 @@ const AnimalOverview = ({ animal, formatDate }: AnimalOverviewProps) => {
 
           {/* Animal Details */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Calendar className="w-5 h-5 text-emerald-600" />
@@ -52,6 +52,16 @@ const AnimalOverview = ({ animal, formatDate }: AnimalOverviewProps) => {
                 </div>
 
                 <div className="flex items-center space-x-3">
+                  <User className="w-5 h-5 text-emerald-600" />
+                  <div>
+                    <div className="text-sm text-gray-500">Microchip ID</div>
+                    <div className="font-medium">{animal.microchipId}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
                   <MapPin className="w-5 h-5 text-emerald-600" />
                   <div>
                     <div className="text-sm text-gray-500">Habitat</div>
@@ -66,16 +76,6 @@ const AnimalOverview = ({ animal, formatDate }: AnimalOverviewProps) => {
                     <div className="font-medium capitalize">{animal.enclosure.enclosureType}</div>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <User className="w-5 h-5 text-emerald-600" />
-                  <div>
-                    <div className="text-sm text-gray-500">Microchip ID</div>
-                    <div className="font-medium">{animal.microchipId}</div>
-                  </div>
-                </div>
 
                 <div className="flex items-center space-x-3">
                   <Calendar className="w-5 h-5 text-emerald-600" />
@@ -84,7 +84,9 @@ const AnimalOverview = ({ animal, formatDate }: AnimalOverviewProps) => {
                     <div className="font-medium">{formatDate(animal.acquisitionDate)}</div>
                   </div>
                 </div>
+              </div>
 
+              <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Shield className="w-5 h-5 text-emerald-600" />
                   <div>

@@ -12,11 +12,10 @@ import AddMedicalRecordModal from "../components/AddMedicalRecordModal"
 import AddObservationModal from "../components/AddObservationModal"
 import { api } from "../lib/http-client"
 import { ArrowLeft, Eye, Stethoscope, Utensils, Home } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useObservations, useMedicalRecords, useFeedingRecords, queryKeys } from '../hooks/useAnimalData'
 import type { 
   AnimalDetailsData, 
-  Observation, 
-  MedicalRecord, 
-  FeedingRecord, 
   ModalType 
 } from '../types/animalDetails'
 
@@ -25,16 +24,16 @@ type TabType = 'overview' | 'observations' | 'medical' | 'feeding'
 export const AnimalDetails = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [animal, setAnimal] = useState<AnimalDetailsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [activeTab, setActiveTab] = useState<TabType>('observations')
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   
-  // Data states
-  const [observations, setObservations] = useState<Observation[]>([])
-  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([])
-  const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([])
-  const [loadingRecords, setLoadingRecords] = useState(false)
+  // React Query hooks for data fetching
+  const { data: observations = [], isLoading: isLoadingObservations } = useObservations(id)
+  const { data: medicalRecords = [], isLoading: isLoadingMedical } = useMedicalRecords(id)
+  const { data: feedingRecords = [], isLoading: isLoadingFeeding } = useFeedingRecords(id)
 
   useEffect(() => {
     const fetchAnimal = async () => {
@@ -55,65 +54,6 @@ export const AnimalDetails = () => {
     }
   }, [id])
 
-  useEffect(() => {
-    const fetchRecords = async (type: 'observations' | 'medical' | 'feeding') => {
-      if (!id) return
-      
-      try {
-        setLoadingRecords(true)
-        let endpoint = ''
-        
-        switch (type) {
-          case 'observations':
-            endpoint = `/v1/observations?animal_id=${id}`
-            break
-          case 'medical':
-            endpoint = `/v1/medical-records?animal_id=${id}`
-            break
-          case 'feeding':
-            endpoint = `/v1/feeding-records?animal_id=${id}`
-            break
-        }
-
-        const response = await api.get(endpoint)
-        const data = (response as Record<string, unknown>)?.data || []
-        
-        switch (type) {
-          case 'observations':
-            setObservations(Array.isArray(data) ? data as Observation[] : [])
-            break
-          case 'medical':
-            setMedicalRecords(Array.isArray(data) ? data as MedicalRecord[] : [])
-            break
-          case 'feeding':
-            setFeedingRecords(Array.isArray(data) ? data as FeedingRecord[] : [])
-            break
-        }
-      } catch (error) {
-        console.error(`Error fetching ${type}:`, error)
-      } finally {
-        setLoadingRecords(false)
-      }
-    }
-
-    const loadRecords = async () => {
-      if (activeTab !== 'overview' && id) {
-        switch (activeTab) {
-          case 'observations':
-            await fetchRecords('observations')
-            break
-          case 'medical':
-            await fetchRecords('medical')
-            break
-          case 'feeding':
-            await fetchRecords('feeding')
-            break
-        }
-      }
-    }
-    
-    loadRecords()
-  }, [activeTab, id])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -134,7 +74,6 @@ export const AnimalDetails = () => {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: Home },
     { id: 'observations', label: 'Observations', icon: Eye },
     { id: 'medical', label: 'Medical Records', icon: Stethoscope },
     { id: 'feeding', label: 'Feeding Records', icon: Utensils },
@@ -172,10 +111,10 @@ export const AnimalDetails = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "linear-gradient(135deg, #e6f4e6 0%, #f2fff4 50%, #dff0df 100%)" }}>
-      <div className="flex">
+      <div className="flex h-screen">
         <Sidebar />
         
-        <main className="flex-1 p-6 pt-8 md:pt-6 md:ml-52">
+        <main className="flex-1 p-6 pt-8 md:pt-6 md:ml-52 flex flex-col overflow-hidden">
           <div className="mb-6">
             <button 
               onClick={() => navigate('/animals')}
@@ -190,8 +129,8 @@ export const AnimalDetails = () => {
           <AnimalOverview animal={animal} formatDate={formatDate} />
 
           {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border flex-1 flex flex-col min-h-0">
+            <div className="border-b border-gray-200 flex-shrink-0">
               <nav className="-mb-px flex space-x-8 px-6">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
@@ -213,16 +152,12 @@ export const AnimalDetails = () => {
               </nav>
             </div>
 
-            <div className="p-6">
-              {activeTab === 'overview' && (
-                <DietPlanOverview animal={animal} />
-              )}
-
+            <div className="flex-1 flex flex-col min-h-0 p-6">
               {activeTab === 'observations' && (
                 <ObservationsList 
                   animal={animal}
                   observations={observations}
-                  loadingRecords={loadingRecords}
+                  loadingRecords={isLoadingObservations}
                   onAddObservation={() => setActiveModal('observation')}
                   formatDateTime={formatDateTime}
                 />
@@ -232,7 +167,7 @@ export const AnimalDetails = () => {
                 <MedicalRecordsList 
                   animal={animal}
                   medicalRecords={medicalRecords}
-                  loadingRecords={loadingRecords}
+                  loadingRecords={isLoadingMedical}
                   onAddMedicalRecord={() => setActiveModal('medical')}
                   formatDate={formatDate}
                 />
@@ -242,7 +177,7 @@ export const AnimalDetails = () => {
                 <FeedingRecordsList 
                   animal={animal}
                   feedingRecords={feedingRecords}
-                  loadingRecords={loadingRecords}
+                  loadingRecords={isLoadingFeeding}
                   onAddFeedingRecord={() => setActiveModal('feeding')}
                   formatDateTime={formatDateTime}
                 />
@@ -252,45 +187,46 @@ export const AnimalDetails = () => {
         </main>
       </div>
 
-      {/* Modals */}
-      <AddFeedingRecordModal
-        isOpen={activeModal === 'feeding'}
-        onClose={() => setActiveModal(null)}
-        onSuccess={() => {
-          // Refresh feeding records
-          if (activeTab === 'feeding') {
-            setActiveTab('overview')
-            setTimeout(() => setActiveTab('feeding'), 100)
-          }
-        }}
-        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
-      />
+      {/* Modals - Only render when we have animal data */}
+      {animal && (
+        <>
+          <AddFeedingRecordModal
+            isOpen={activeModal === 'feeding'}
+            onClose={() => setActiveModal(null)}
+            onSuccess={() => {
+              // Invalidate feeding records query to trigger automatic refresh
+              if (id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.feedingRecords(id) })
+              }
+            }}
+            preSelectedAnimal={{ _id: animal._id, name: animal.name, species: animal.species }}
+          />
 
-      <AddMedicalRecordModal
-        isOpen={activeModal === 'medical'}
-        onClose={() => setActiveModal(null)}
-        onSuccess={() => {
-          // Refresh medical records
-          if (activeTab === 'medical') {
-            setActiveTab('overview')
-            setTimeout(() => setActiveTab('medical'), 100)
-          }
-        }}
-        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
-      />
+          <AddMedicalRecordModal
+            isOpen={activeModal === 'medical'}
+            onClose={() => setActiveModal(null)}
+            onSuccess={() => {
+              // Invalidate medical records query to trigger automatic refresh
+              if (id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.medicalRecords(id) })
+              }
+            }}
+            preSelectedAnimal={{ _id: animal._id, name: animal.name, species: animal.species }}
+          />
 
-      <AddObservationModal
-        isOpen={activeModal === 'observation'}
-        onClose={() => setActiveModal(null)}
-        onSuccess={() => {
-          // Refresh observations
-          if (activeTab === 'observations') {
-            setActiveTab('overview')
-            setTimeout(() => setActiveTab('observations'), 100)
-          }
-        }}
-        preSelectedAnimal={animal ? { _id: animal._id, name: animal.name, species: animal.species } : undefined}
-      />
+          <AddObservationModal
+            isOpen={activeModal === 'observation'}
+            onClose={() => setActiveModal(null)}
+            onSuccess={() => {
+              // Invalidate observations query to trigger automatic refresh
+              if (id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.observations(id) })
+              }
+            }}
+            preSelectedAnimal={{ _id: animal._id, name: animal.name, species: animal.species }}
+          />
+        </>
+      )}
     </div>
   )
 }

@@ -1,7 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Clock, AlertTriangle, CheckCircle } from 'lucide-react'
 import Modal from './Modal'
-import AnimalSelector from './AnimalSelector'
 import { api } from '../lib/http-client'
 import { useToast } from './toast/ToastContext'
 
@@ -15,7 +14,7 @@ interface AddObservationModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  preSelectedAnimal?: Animal
+  preSelectedAnimal: Animal
 }
 
 interface ObservationFormData {
@@ -104,7 +103,7 @@ const AddObservationModal = ({
   preSelectedAnimal 
 }: AddObservationModalProps) => {
   const [formData, setFormData] = useState<ObservationFormData>({
-    animal_id: preSelectedAnimal?._id || '',
+    animal_id: preSelectedAnimal._id,
     observation_at: new Date().toISOString().slice(0, 16),
     observer_staff_id: '',
     behavior_category: 'feeding',
@@ -118,16 +117,8 @@ const AddObservationModal = ({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { push } = useToast()
 
-  const handleAnimalSelect = useCallback((animalId: string) => {
-    setFormData(prev => ({ ...prev, animal_id: animalId }))
-  }, [])
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-
-    if (!formData.animal_id) {
-      newErrors.animal_id = 'Animal selection is required'
-    }
     if (!formData.observation_at) {
       newErrors.observation_at = 'Observation date and time is required'
     }
@@ -178,7 +169,7 @@ const AddObservationModal = ({
       onSuccess()
       onClose()
       setFormData({
-        animal_id: '',
+        animal_id: preSelectedAnimal._id,
         observation_at: new Date().toISOString().slice(0, 16),
         observer_staff_id: '',
         behavior_category: 'feeding',
@@ -240,17 +231,15 @@ const AddObservationModal = ({
           </div>
         )}
 
-        {/* Animal Selection */}
+        {/* Animal Info Display */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Animal <span className="text-red-500">*</span>
+            Animal
           </label>
-          <AnimalSelector
-            selectedAnimalId={formData.animal_id}
-            onAnimalSelect={handleAnimalSelect}
-            disabled={!!preSelectedAnimal}
-          />
-          {errors.animal_id && <p className="mt-1 text-sm text-red-600">{errors.animal_id}</p>}
+          <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+            <span className="font-medium">{preSelectedAnimal.name}</span>
+            <span className="text-gray-500 ml-2">({preSelectedAnimal.species})</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -269,20 +258,6 @@ const AddObservationModal = ({
               required
             />
             {errors.observation_at && <p className="mt-1 text-sm text-red-600">{errors.observation_at}</p>}
-          </div>
-
-          {/* Observer Staff ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Observer Staff ID
-            </label>
-            <input 
-              type="text"
-              value={formData.observer_staff_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, observer_staff_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Staff member ID (optional)"
-            />
           </div>
         </div>
 
