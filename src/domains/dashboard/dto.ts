@@ -51,8 +51,6 @@ const DashboardCreateSchema = z.object({
   
   include_population_stats: z.boolean().default(true),
   
-  include_financial_data: z.boolean().default(false),
-  
   animal_ids: z.array(z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
     message: 'Invalid animal ID format'
   })).optional(),
