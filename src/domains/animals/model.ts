@@ -69,7 +69,7 @@ const AnimalSchema = new Schema<IAnimal>({
   causeOfDeath: { type: String },
   distinguishingMarks: { type: String },
   images: { type: String},
-  microchipId: { type: String, unique: true },
+  microchipId: { type: String, required:false},
   weight:{type:Number,required:true},
   extraAttributes: { type: Schema.Types.Mixed },
   enclosure: { type: EnclosureSchema, required: true },
