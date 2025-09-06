@@ -57,7 +57,23 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      const errorMessage = (error.response.data as any)?.error || 'An error occurred'
+      const responseData = error.response.data as any
+      let errorMessage = 'An error occurred'
+      
+      // Try to extract the most detailed error message
+      if (responseData?.message) {
+        errorMessage = responseData.message
+        if (responseData.errors) {
+          // Include validation errors if they exist
+          const validationErrors = Array.isArray(responseData.errors) 
+            ? responseData.errors.join(', ')
+            : JSON.stringify(responseData.errors)
+          errorMessage += `: ${validationErrors}`
+        }
+      } else if (responseData?.error) {
+        errorMessage = responseData.error
+      }
+      
       throw new ApiError(
         error.response.status,
         errorMessage,

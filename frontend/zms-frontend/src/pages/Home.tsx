@@ -1,161 +1,210 @@
+import React, { useMemo } from 'react'
+import Sidebar from '../components/Sidebar'
+import ActivityItem from '../components/ActivityItem'
+import Header from '../components/Header'
+import StatsCard from '../components/StatsCard'
 import { useAuth } from '../contexts/AuthContext'
+import { useOverview, type RealtimeAnalyticsResponse } from '../hooks/useOverview'
 
-export const Home = () => {
-  const { user, signOut } = useAuth()
+// ==========================
+// Helpers
+// ==========================
+function toTimeAgo(iso: string) {
+  const now = new Date()
+  const then = new Date(iso)
+  const diffMs = now.getTime() - then.getTime()
+  const abs = Math.abs(diffMs)
+  const minutes = Math.floor(abs / (60 * 1000))
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? '' : 's'} ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.floor(hours / 24)
+  return `${days} day${days === 1 ? '' : 's'} ago`
+}
 
-  const stats = [
-    { label: 'Total Animals', value: '127', icon: '🦁' },
-    { label: 'Active Enclosures', value: '15', icon: '🏠' },
-    { label: 'Staff Members', value: '24', icon: '👥' },
-    { label: 'Daily Reports', value: '8', icon: '📊' },
-  ]
+function formatNumber(n: number | undefined) {
+  return typeof n === 'number' ? n.toLocaleString() : '—'
+}
 
-  const quickActions = [
-    { 
-      title: 'Animal Onboarding', 
-      description: 'Register new animals with details, enclosure, and diet plans',
-      icon: '➕',
-      action: () => console.log('Navigate to animal onboarding')
-    },
-    { 
-      title: 'Daily Care Records', 
-      description: 'Submit daily observations and feeding records',
-      icon: '📝',
-      action: () => console.log('Navigate to care records')
-    },
-    { 
-      title: 'Medical Records', 
-      description: 'View and update animal medical history',
-      icon: '🏥',
-      action: () => console.log('Navigate to medical records')
-    },
-    { 
-      title: 'Analytics Dashboard', 
-      description: 'View insights and reports across the zoo',
-      icon: '📈',
-      action: () => console.log('Navigate to analytics')
-    },
-  ]
+type FeedItem = {
+  animal: string
+  species: string
+  action: string
+  timeAgo: string
+  staff?: string
+  photo?: string
+  type: 'feeding' | 'medical' | 'observation' | 'vaccination' | 'measurement' | 'other'
+  createdAt: string
+}
 
-  const recentActivities = [
-    { activity: 'Leo (Lion) - Daily observation submitted', time: '2 hours ago', type: 'observation' },
-    { activity: 'New animal: Bella (Elephant) registered', time: '4 hours ago', type: 'registration' },
-    { activity: 'Medical checkup completed for Max (Tiger)', time: '6 hours ago', type: 'medical' },
-    { activity: 'Diet plan updated for Penguins enclosure', time: '1 day ago', type: 'diet' },
-  ]
+function mapApiToFeed(api: RealtimeAnalyticsResponse): FeedItem[] {
+  const out: FeedItem[] = []
+  const { todayActivities } = api
+
+  todayActivities.animalsOnboarded.details.forEach((d) => {
+    out.push({
+      animal: d.name,
+      species: d.species,
+      action: `Onboarded (microchip ${d.microchipId})`,
+      timeAgo: toTimeAgo(d.onboardedAt),
+      staff: undefined,
+      photo: '/images/logo-64.svg',
+      type: 'other',
+      createdAt: d.onboardedAt,
+    })
+  })
+
+  todayActivities.feedingRecords.details.forEach((f) => {
+    const kg = (f.quantityGiven / 1000).toFixed(2)
+    out.push({
+      animal: f.animalName,
+      species: f.animalSpecies,
+      action: `Feeding: ${f.dietItem} • ${kg} kg • appetite ${f.appetiteRating}`,
+      timeAgo: toTimeAgo(f.createdAt),
+      staff: f.staffName,
+      photo: '/images/logo-64.svg',
+      type: 'feeding',
+      createdAt: f.createdAt,
+    })
+  })
+
+  todayActivities.observations.details?.forEach((o: any) => {
+    const ts = o.createdAt || o.observedAt || api.generatedAt
+    out.push({
+      animal: o.animalName || o.name || 'Unknown',
+      species: o.animalSpecies || o.species || '—',
+      action: o.summary || 'Observation recorded',
+      timeAgo: toTimeAgo(ts),
+      staff: o.staffName,
+      photo: '/images/logo-64.svg',
+      type: 'observation',
+      createdAt: ts,
+    })
+  })
+
+  todayActivities.medicalRecords.details?.forEach((m: any) => {
+    const ts = m.createdAt || m.performedAt || api.generatedAt
+    out.push({
+      animal: m.animalName || m.name || 'Unknown',
+      species: m.animalSpecies || m.species || '—',
+      action: m.summary || 'Medical record added',
+      timeAgo: toTimeAgo(ts),
+      staff: m.staffName,
+      photo: '/images/logo-64.svg',
+      type: 'medical',
+      createdAt: ts,
+    })
+  })
+
+  todayActivities.newUsers.details?.forEach((u: any) => {
+    const ts = u.createdAt || api.generatedAt
+    out.push({
+      animal: u.name || u.email || 'New User',
+      species: '—',
+      action: 'User registered',
+      timeAgo: toTimeAgo(ts),
+      staff: undefined,
+      photo: '/images/logo-64.svg',
+      type: 'other',
+      createdAt: ts,
+    })
+  })
+
+  out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  return out
+}
+
+export const Home: React.FC = () => {
+  const { signOut } = useAuth()
+  const { data, isLoading, error } = useOverview()
+
+  const feed: FeedItem[] = useMemo(() => (data ? mapApiToFeed(data) : []), [data])
+
+  const totalAnimals = data?.data.animals ?? 0
+  const entriesToday = useMemo(() => {
+    if (!data) return 0
+    const t = data.todayActivities
+    return (t.animalsOnboarded?.count || 0) + (t.medicalRecords?.count || 0) + (t.observations?.count || 0) + (t.feedingRecords?.count || 0) + (t.newUsers?.count || 0)
+  }, [data])
+
+  const summaryByType = useMemo(() => {
+    const t = data?.todayActivities
+    return {
+      Onboarded: t?.animalsOnboarded.count ?? 0,
+      Feeding: t?.feedingRecords.count ?? 0,
+      Medical: t?.medicalRecords.count ?? 0,
+      Observations: t?.observations.count ?? 0,
+      'New Users': t?.newUsers.count ?? 0,
+    }
+  }, [data])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.username}! 👋
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here's what's happening at the zoo today
-          </p>
-        </div>
-        <button
-          onClick={signOut}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          Sign Out
-        </button>
-      </div>
+    <div className="min-h-screen overflow-x-hidden" style={{
+      background: 'linear-gradient(135deg, #e6f4e6 0%, #f2fff4 50%, #dff0df 100%)',
+    }}>
+      <div className="flex">
+        <Sidebar />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-6 border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
-              </div>
-              <div className="text-3xl">{stat.icon}</div>
-            </div>
+        <main className="flex-1 p-6 pt-8 md:pt-6 md:ml-52">
+          <Header
+            title="Dashboard"
+            subtitle={data ? `Real-time snapshot · Updated ${toTimeAgo(data.generatedAt)}` : 'Management system recent entries'}
+            actions={<button onClick={signOut} className="px-3 py-1 rounded bg-red-600 text-white text-sm">Sign Out</button>}
+          />
+
+          {isLoading && (
+            <div className="mb-6 text-sm text-gray-600">Loading real-time analytics…</div>
+          )}
+          {error && (
+            <div className="mb-6 text-sm text-red-600">Failed to load data</div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <StatsCard label="Total Animals" value={formatNumber(totalAnimals)} />
+            <StatsCard label="Entries Today" value={formatNumber(entriesToday)} />
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quickActions.map((action, index) => (
-              <div
-                key={index}
-                onClick={action.action}
-                className="bg-white rounded-lg shadow-sm p-6 border hover:shadow-md transition-shadow cursor-pointer hover:border-blue-200"
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="text-2xl">{action.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 mb-1">{action.title}</h3>
-                    <p className="text-sm text-gray-600">{action.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activities</h2>
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-4">
-              <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.type === 'observation' ? 'bg-blue-500' :
-                      activity.type === 'registration' ? 'bg-green-500' :
-                      activity.type === 'medical' ? 'bg-red-500' :
-                      'bg-yellow-500'
-                    }`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">{activity.activity}</p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section className="lg:col-span-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h2>
+              <div className="bg-white rounded-lg shadow-sm border p-4 space-y-2">
+                {feed.length === 0 && (
+                  <div className="text-sm text-gray-500">No activity yet today.</div>
+                )}
+                {feed.map((r, i) => (
+                  <ActivityItem
+                    key={i}
+                    animal={r.animal}
+                    species={r.species}
+                    action={r.action}
+                    timeAgo={r.timeAgo}
+                    staff={r.staff!}
+                    photo={r.photo}
+                    type={r.type}
+                  />
                 ))}
               </div>
-            </div>
-            <div className="border-t px-4 py-3">
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                View all activities →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            </section>
 
-      {/* Emergency Alert Section */}
-      <div className="mt-8">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <span className="text-amber-600 text-xl">⚠️</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-amber-800">
-                Daily Checklist Reminder
-              </h3>
-              <p className="text-sm text-amber-700 mt-1">
-                Don't forget to complete today's animal welfare checks and feeding schedules.
-              </p>
-            </div>
-            <div className="ml-auto">
-              <button className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm transition-colors">
-                View Checklist
-              </button>
-            </div>
+            <aside>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Today's Summary</h2>
+              <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Entries by Type</h3>
+                  <ul className="mt-2 text-sm text-gray-600 space-y-1">
+                    {Object.entries(summaryByType).map(([k, v]) => (
+                      <li key={k} className="flex justify-between"><span>{k}</span><span>{v}</span></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </aside>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )
 }
+
+export default Home

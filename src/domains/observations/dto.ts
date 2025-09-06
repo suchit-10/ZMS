@@ -10,6 +10,10 @@ const ObservationSchema = z.object({
     (date) => date <= new Date(),
     "Observation date cannot be in the future"
   ),
+
+  observer_staff_id: z.string().transform((val) => val === '' ? undefined : val).refine((val) => val === undefined || mongoose.Types.ObjectId.isValid(val), {
+    message: 'Invalid observer staff ID format'
+  }).optional(),
   
   behavior_category: z.enum([
     "feeding",
